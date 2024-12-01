@@ -18,7 +18,7 @@ export class BookSummarizer {
         book: Book,
         model: TypeChatLanguageModel,
         schema: string,
-        concurrencyLimit: number = 20
+        concurrencyLimit: number = 75
     ) {
         this.book = book;
         this.concurrencyLimit = concurrencyLimit;

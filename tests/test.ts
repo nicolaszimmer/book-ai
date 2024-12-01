@@ -1,4 +1,4 @@
-import BookAI from '../src/index';
+/*import BookAI from '../src/index';
 
 // Enable debug logging if needed
 import debug from 'debug';
@@ -35,4 +35,4 @@ const content = [
 const book = bookAI.load(content)
 
 // Generate summaries
-const summaries = await bookAI.summarizeSections();
+const summaries = await bookAI.summarizeSections();*/

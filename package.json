@@ -11,6 +11,7 @@
         "test:summarize": "ts-node tests/summarize.ts"
     },
     "dependencies": {
+        "@anthropic-ai/sdk": "^0.32.1",
         "debug": "^4.3.7",
         "dotenv": "^16.4.5",
         "p-limit": "^3.1.0",

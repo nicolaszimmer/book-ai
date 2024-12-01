@@ -62,6 +62,12 @@ ${_additionalAgentInstructions}
 Previous analysis context (if any):
 ${historyStr}
 
+Guidelines:
+- summary: Provide a clear, comprehensive overview of the section's content
+- writingStyle: Use 2-4 key descriptive words (e.g., "descriptive, dialogue-heavy, fast-paced")
+- tonality: Use 2-4 emotional/mood keywords (e.g., "tense, reflective, humorous")
+- keyEvents: List main plot points and significant developments
+
 The following is a section to analyze:
 '''
 ${intent}

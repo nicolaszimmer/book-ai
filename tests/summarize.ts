@@ -1,6 +1,7 @@
 // tests/summarize.ts
 import dotenv from 'dotenv';
 import BookAI from '../src/index';
+import { BookAIConfig }  from '../src/index';
 dotenv.config();
 
 import debug from 'debug';
@@ -12,7 +13,8 @@ async function main() {
     process.exit(1);
   }
 
-  const bookAI = new BookAI(process.env.OPENAI_API_KEY);
+    const config: BookAIConfig = {openAIApiKey:process.env.OPENAI_API_KEY!, anthropicApiKey:process.env.ANTHROPIC_API_KEY!}
+  const bookAI = new BookAI(config);
   
   const content = [
     [
@@ -42,9 +44,12 @@ async function main() {
   console.log(`Loaded ${book.sections.length} sections`);
 
   console.log('Generating summaries...');
-  const summaries = await bookAI.summarizeSections();
+  const summaries = await bookAI.getSectionSummaries();
   console.log('Summaries generated:');
-  console.log(JSON.stringify(summaries, null, 2));
+    console.log(JSON.stringify(summaries, null, 2));
+    
+    const analysis = await bookAI.analyze()
+    console.log(JSON.stringify(analysis, null, 2));
 }
 
 main().catch(error => {
