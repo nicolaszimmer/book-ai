@@ -4,8 +4,9 @@ import { createLanguageModel } from 'typechat';
 import { BookLoader } from './loader';
 import { BookSummarizer } from './summarizer';
 import { SummariesAnalyzer, ComprehensiveSummary } from './summariesAnalyzer';
+import { SummaryChat, ChatRequest } from './summaryChat';
 import { Book } from './types';
-import { BookSummary } from './schema/summarySchema';
+import { BookSummary, SectionSummary } from './schema/summarySchema';
 
 const log: Debugger = debug('book-ai:main');
 
@@ -34,6 +35,9 @@ export class BookAI {
     private summarizer: BookSummarizer | null = null;
     private anthropicApiKey: string;
     private anthropicModel: string;
+    private comprehensiveSummary: ComprehensiveSummary | null = null;
+    private summaryChat: SummaryChat | null = null;
+    private bookSummary: BookSummary | null = null;
 
     constructor(config: BookAIConfig) {
         log('Initializing BookAI');
@@ -74,7 +78,8 @@ export class BookAI {
         if (!this.book || !this.summarizer) {
             throw new Error('No book loaded. Call load() first.');
         }
-        return await this.summarizer.summarizeSections();
+        this.bookSummary = await this.summarizer.summarizeSections()
+        return this.bookSummary;
     }
 
     async analyze(): Promise<ComprehensiveSummary> {
@@ -83,9 +88,39 @@ export class BookAI {
             throw new Error('No book loaded. Call load() first.');
         }
 
-        const summaries = await this.getSectionSummaries();
+        const summaries = this.bookSummary ||  await this.getSectionSummaries();
         const analyzer = new SummariesAnalyzer(this.anthropicApiKey, this.anthropicModel);
-        return await analyzer.analyze(summaries);
+        this.comprehensiveSummary = await analyzer.analyze(summaries);
+        return this.comprehensiveSummary;
+    }
+
+    loadSummary(summary: ComprehensiveSummary): void {
+        log('Loading existing comprehensive summary');
+        this.comprehensiveSummary = summary;
+    }
+
+    async refineSection(request: ChatRequest): Promise<ComprehensiveSummary> {
+        log(`Refining section: ${request.section}`);
+        
+        if (!this.comprehensiveSummary) {
+            throw new Error('No summary available. Call analyze() or loadSummary() first.');
+        }
+
+        if (!this.summaryChat) {
+            this.summaryChat = new SummaryChat(
+                this.anthropicApiKey,
+                this.anthropicModel,
+                this.comprehensiveSummary
+            );
+        }
+
+        const updatedSummary = await this.summaryChat.refineSection(request);
+        this.comprehensiveSummary = updatedSummary;
+        return updatedSummary;
+    }
+
+    getSummary(): ComprehensiveSummary | null {
+        return this.comprehensiveSummary;
     }
 
     getBook(): Book | null {

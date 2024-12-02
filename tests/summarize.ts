@@ -50,6 +50,18 @@ async function main() {
     
     const analysis = await bookAI.analyze()
     console.log(JSON.stringify(analysis, null, 2));
+
+    let updated= await bookAI.refineSection({
+        section: 'marketingCopy',
+        instruction: 'Make it more suitable for young adult readers'
+    });
+    console.log(JSON.stringify(updated, null, 2));
+
+    updated= await bookAI.refineSection({
+        section: 'marketingCopy',
+        instruction: 'Make it more suitable for fans of military action'
+    });
+    console.log(JSON.stringify(updated, null, 2));
 }
 
 main().catch(error => {

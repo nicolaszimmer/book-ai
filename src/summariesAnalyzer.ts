@@ -74,6 +74,7 @@ Return the analysis as a JSON object with this structure:
             }
 
             const result = JSON.parse(response.content[0].text) as ComprehensiveSummary;
+            log('Analysis completed.');
             return result;
 
         } catch (error: unknown) {
