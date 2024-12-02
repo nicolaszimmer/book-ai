@@ -18,19 +18,31 @@ export interface ChatHistoryEntry {
     updatedContent: string | string[];
 }
 
+export interface ExportedHistory {
+    version: string;
+    timestamp: string;
+    initialSummary: ComprehensiveSummary;
+    history: ChatHistoryEntry[];
+    currentSummary: ComprehensiveSummary;
+}
+
 export class SummaryChat {
     private anthropic: Anthropic;
     private model: string;
     private summary: ComprehensiveSummary;
     private chatHistory: ChatHistoryEntry[] = [];
+    private initialSummary: ComprehensiveSummary;
     private readonly maxHistoryEntries = 5;
+    private static readonly HISTORY_VERSION = '1.0';
 
     constructor(anthropicApiKey: string, model: string, summary: ComprehensiveSummary) {
         this.anthropic = new Anthropic({
-            apiKey: anthropicApiKey
+            apiKey: anthropicApiKey,
+            dangerouslyAllowBrowser: true
         });
         this.model = model;
-        this.summary = summary;
+        this.summary = { ...summary };  // Create deep copy
+        this.initialSummary = { ...summary };  // Store initial state
     }
 
     private getRelevantHistory(section: keyof ComprehensiveSummary): ChatHistoryEntry[] {
@@ -154,7 +166,7 @@ Remember: While you can add requested new elements, never invent or modify core 
             const response = await this.anthropic.messages.create({
                 model: this.model,
                 max_tokens: 4096,
-                temperature: 0.5,
+                temperature: 0.3,
                 system: systemPrompt,
                 messages: [{
                     role: "user",
@@ -234,6 +246,102 @@ Return ONLY the new content for this section, formatted as valid JSON that can r
             throw new Error(`Failed to refine summary: ${errorMessage}`);
         }
     }
+
+    /**
+     * Export the complete history including initial and current state
+     */
+    exportHistory(): ExportedHistory {
+        return {
+            version: SummaryChat.HISTORY_VERSION,
+            timestamp: new Date().toISOString(),
+            initialSummary: this.initialSummary,
+            history: this.chatHistory,
+            currentSummary: this.summary
+        };
+    }
+
+    /**
+     * Import a previously exported history
+     * @throws Error if the history format is invalid or incompatible
+     */
+    importHistory(exported: ExportedHistory): void {
+        if (!exported.version || exported.version !== SummaryChat.HISTORY_VERSION) {
+            throw new Error('Incompatible history version');
+        }
+
+        if (!exported.initialSummary || !exported.history || !exported.currentSummary) {
+            throw new Error('Invalid history format');
+        }
+
+        this.initialSummary = exported.initialSummary;
+        this.chatHistory = exported.history;
+        this.summary = exported.currentSummary;
+
+        log(`Imported history with ${this.chatHistory.length} entries`);
+    }
+
+    /**
+     * Revert changes to a specific point in history
+     * @param timestamp - Revert to the state after this timestamp's change
+     * @returns The reverted summary
+     * @throws Error if timestamp is not found
+     */
+    revertToTimestamp(timestamp: string): ComprehensiveSummary {
+        const entryIndex = this.chatHistory.findIndex(entry => entry.timestamp === timestamp);
+        if (entryIndex === -1) {
+            throw new Error('Timestamp not found in history');
+        }
+
+        // Keep history up to and including the target entry
+        this.chatHistory = this.chatHistory.slice(0, entryIndex + 1);
+
+        // Rebuild state from initial summary and applying changes up to the target point
+        let rebuiltSummary = { ...this.initialSummary };
+        for (const entry of this.chatHistory) {
+            rebuiltSummary = {
+                ...rebuiltSummary,
+                [entry.section]: entry.updatedContent
+            };
+        }
+
+        this.summary = rebuiltSummary;
+        return this.summary;
+    }
+
+    /**
+     * Revert the last change
+     * @returns The reverted summary
+     * @throws Error if there's no history to revert
+     */
+    revertLastChange(): ComprehensiveSummary {
+        if (this.chatHistory.length === 0) {
+            throw new Error('No changes to revert');
+        }
+
+        const lastEntry = this.chatHistory[this.chatHistory.length - 1];
+        
+        // Update the summary with the previous content
+        this.summary = {
+            ...this.summary,
+            [lastEntry.section]: lastEntry.previousContent
+        };
+
+        // Remove the last entry from history
+        this.chatHistory.pop();
+
+        return this.summary;
+    }
+
+    /**
+     * Reset to initial state
+     * @returns The initial summary
+     */
+    reset(): ComprehensiveSummary {
+        this.summary = { ...this.initialSummary };
+        this.chatHistory = [];
+        return this.summary;
+    }
+
 
     getSummary(): ComprehensiveSummary {
         return this.summary;

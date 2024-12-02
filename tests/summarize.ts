@@ -53,9 +53,13 @@ async function main() {
 
     let updated= await bookAI.refineSection({
         section: 'marketingCopy',
-        instruction: 'Make it more suitable for young adult readers'
+        instruction: 'What is Stoicism?'
     });
     console.log(JSON.stringify(updated, null, 2));
+
+    bookAI.revertLastChange()
+
+    console.log(JSON.stringify(bookAI.getSummary(), null, 2));
 
     updated= await bookAI.refineSection({
         section: 'marketingCopy',

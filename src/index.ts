@@ -4,7 +4,7 @@ import { createLanguageModel } from 'typechat';
 import { BookLoader } from './loader';
 import { BookSummarizer } from './summarizer';
 import { SummariesAnalyzer, ComprehensiveSummary } from './summariesAnalyzer';
-import { SummaryChat, ChatRequest } from './summaryChat';
+import { SummaryChat, ChatRequest, ChatHistoryEntry, ExportedHistory } from './summaryChat';
 import { Book } from './types';
 import { BookSummary, SectionSummary } from './schema/summarySchema';
 
@@ -126,9 +126,87 @@ export class BookAI {
     getBook(): Book | null {
         return this.book;
     }
+
+    exportHistory(): ExportedHistory | null {
+        if (!this.summaryChat) {
+            log('No chat history available');
+            return null;
+        }
+        return this.summaryChat.exportHistory();
+    }
+
+    importHistory(history: ExportedHistory): void {
+        log('Importing chat history');
+        if (!this.comprehensiveSummary) {
+            throw new Error('No summary available. Call analyze() or loadSummary() first.');
+        }
+
+        if (!this.summaryChat) {
+            this.summaryChat = new SummaryChat(
+                this.anthropicApiKey,
+                this.anthropicModel,
+                this.comprehensiveSummary
+            );
+        }
+
+        this.summaryChat.importHistory(history);
+        // Update our stored summary with the imported current state
+        this.comprehensiveSummary = this.summaryChat.getSummary();
+    }
+
+    revertToTimestamp(timestamp: string): ComprehensiveSummary {
+        if (!this.summaryChat) {
+            throw new Error('No chat history available');
+        }
+        const revertedSummary = this.summaryChat.revertToTimestamp(timestamp);
+        this.comprehensiveSummary = revertedSummary;
+        return revertedSummary;
+    }
+
+    revertLastChange(): ComprehensiveSummary {
+        if (!this.summaryChat) {
+            throw new Error('No chat history available');
+        }
+        const revertedSummary = this.summaryChat.revertLastChange();
+        this.comprehensiveSummary = revertedSummary;
+        return revertedSummary;
+    }
+
+    resetToInitial(): ComprehensiveSummary {
+        if (!this.summaryChat) {
+            throw new Error('No chat history available');
+        }
+        const initialSummary = this.summaryChat.reset();
+        this.comprehensiveSummary = initialSummary;
+        return initialSummary;
+    }
+
+    getChatHistory(): ChatHistoryEntry[] {
+        if (!this.summaryChat) {
+            return [];
+        }
+        return this.summaryChat.getHistory();
+    }
 }
 
-export type { Book, BookSection } from './types';
-export type { BookSummary, SectionSummary } from './schema/summarySchema';
-export type { BookAIConfig, ComprehensiveSummary }
+// Export types and classes
+export type {
+    Book,
+    BookSection
+} from './types';
+
+export type {
+    BookSummary,
+    SectionSummary
+} from './schema/summarySchema';
+
+export type {
+    BookAIConfig,
+    ComprehensiveSummary,
+    ChatRequest,
+    ChatHistoryEntry,
+    ExportedHistory
+};
+
+export { SummaryChat };
 export default BookAI;
