@@ -7,6 +7,7 @@ import { SummariesAnalyzer, ComprehensiveSummary } from './summariesAnalyzer';
 import { SummaryChat, ChatRequest, ChatHistoryEntry, ExportedHistory } from './summaryChat';
 import { Book } from './types';
 import { BookSummary, SectionSummary } from './schema/summarySchema';
+import { SampleSelector } from './sampleSelector';
 
 const log: Debugger = debug('book-ai:main');
 
@@ -208,5 +209,5 @@ export type {
     ExportedHistory
 };
 
-export { SummaryChat };
+export { SummaryChat, SampleSelector };
 export default BookAI;
