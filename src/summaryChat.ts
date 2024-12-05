@@ -14,7 +14,7 @@ export interface ChatHistoryEntry {
     timestamp: string;
     section: keyof ComprehensiveSummary;
     instruction: string;
-    previousContent: string | string[];
+    previousContent: string | string[] | null ;
     updatedContent: string | string[];
 }
 

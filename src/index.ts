@@ -25,7 +25,8 @@ export interface SectionSummary {
     summary: string;         
     writingStyle: string;    
     tonality: string;        
-    keyEvents: string[];     
+    keyEvents: string[];
+    qualityIssues: string[];     
 }
 `;
 

@@ -30,6 +30,7 @@ Focus on:
 - Key plot points and significant events
 - Character development and interactions
 - Themes and motifs
+- Quality issues (orthography, grammar, plot inconsistencies)
 Maintain consistency in analysis across sections.`;
 
         this.translator = createBookTranslator(model, schema, instructions);

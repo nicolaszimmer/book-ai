@@ -1,13 +1,14 @@
 import { Debugger } from 'debug';
 import debug from 'debug';
 import Anthropic from '@anthropic-ai/sdk';
-import { BookSummary } from './schema/summarySchema';
+import { BookSummary, SectionSummary } from './schema/summarySchema';
 
 const log: Debugger = debug('book-ai:analyzer');
 
 interface ComprehensiveSummary {
     summary: string;
     writingStyle: string;
+    quality: string | null;
     keywords: string[];
     genres: string[];
     marketingCopy: string;
@@ -35,6 +36,7 @@ Summary: ${section.summary}
 Writing Style: ${section.writingStyle}
 Tone: ${section.tonality}
 Key Events: ${section.keyEvents.join(', ')}
+Quality Issues: ${section.qualityIssues.join(', ')}
             `)
             .join('\n');
 
@@ -49,10 +51,11 @@ Key Events: ${section.keyEvents.join(', ')}
                     content: `Analyze these book section summaries and create:
 1. A cohesive, extensive summary that connects all sections (at least 500 words)
 2. An analysis of the overall writing style
-3. Key thematic keywords (10-15 words or short phrases)
-4. Up to three genre categories that best fit the work
-5. Marketing copy for the book, suitable for Amazon. Don't give away important developments and adhere to the conventions of the genre.
-6. Up to three comparable authors (first and last name) that write in the same style, gnere and topics 
+3. An analysis of quality problems. Also look at the overall plot, narrative and chapter structure. If no issues are found, return null.
+4. Key thematic keywords (10-15 words or short phrases)
+5. Up to three genre categories that best fit the work
+6. Marketing copy for the book, suitable for Amazon. Don't give away important developments and adhere to the conventions of the genre.
+7. Up to three comparable authors (first and last name) that write in the same style, gnere and topics 
 
 Here are the section summaries:
 ${summariesText}
@@ -61,6 +64,7 @@ Return the analysis as a JSON object with this structure:
 {
     "summary": "comprehensive summary here",
     "writingStyle": "writing style analysis here",
+    "quality": "quality analysis here" | null,
     "keywords": ["keyword1", "keyword2", ...],
     "genres": ["genre1", "genre2", "genre3"],
     "marketingCopy": "compose marketing copy here",

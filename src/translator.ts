@@ -67,6 +67,7 @@ Guidelines:
 - writingStyle: Use 2-4 key descriptive words (e.g., "descriptive, dialogue-heavy, fast-paced")
 - tonality: Use 2-4 emotional/mood keywords (e.g., "tense, reflective, humorous")
 - keyEvents: List main plot points and significant developments
+- qualityIssues: List quality issues (orthography, grammar, plot inconsistencies)
 
 The following is a section to analyze:
 '''
