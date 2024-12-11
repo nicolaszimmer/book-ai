@@ -8,6 +8,7 @@ import { SummaryChat, ChatRequest, ChatHistoryEntry, ExportedHistory } from './s
 import { Book } from './types';
 import { BookSummary, SectionSummary } from './schema/summarySchema';
 import { SampleSelector } from './sampleSelector';
+import { config } from 'dotenv';
 
 const log: Debugger = debug('book-ai:main');
 
@@ -32,6 +33,7 @@ export interface SectionSummary {
 
 export class BookAI {
     private openAIModel;
+    private openAIApiKey: string;
     private schema: string;
     private book: Book | null = null;
     private summarizer: BookSummarizer | null = null;
@@ -47,6 +49,8 @@ export class BookAI {
         if (!config.openAIApiKey || !config.anthropicApiKey) {
             throw new Error('Both OpenAI and Anthropic API keys are required');
         }
+
+        this.openAIApiKey = config.openAIApiKey;
 
         this.openAIModel = createLanguageModel({ 
             OPENAI_API_KEY: config.openAIApiKey,
@@ -69,7 +73,8 @@ export class BookAI {
         this.summarizer = new BookSummarizer(
             this.book, 
             this.openAIModel,
-            this.schema
+            this.schema,
+            this.openAIApiKey
         );
         log(`Loaded book with ${this.book.sections.length} sections`);
         return this.book;
