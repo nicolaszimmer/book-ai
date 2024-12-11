@@ -13,7 +13,7 @@ async function main() {
     process.exit(1);
   }
 
-    const config: BookAIConfig = {openAIApiKey:process.env.OPENAI_API_KEY!, anthropicApiKey:process.env.ANTHROPIC_API_KEY!}
+  const config: BookAIConfig = {openAIApiKey:process.env.OPENAI_API_KEY!, anthropicApiKey:process.env.ANTHROPIC_API_KEY!}
   const bookAI = new BookAI(config);
   
   const content = [
@@ -46,26 +46,11 @@ async function main() {
   console.log('Generating summaries...');
   const summaries = await bookAI.getSectionSummaries();
   console.log('Summaries generated:');
-    console.log(JSON.stringify(summaries, null, 2));
+  console.log(JSON.stringify(summaries, null, 2));
     
-    const analysis = await bookAI.analyze()
-    console.log(JSON.stringify(analysis, null, 2));
+  /*const analysis = await bookAI.analyze()
+  console.log(JSON.stringify(analysis, null, 2));*/
 
-    let updated= await bookAI.refineSection({
-        section: 'marketingCopy',
-        instruction: 'What is Stoicism?'
-    });
-    console.log(JSON.stringify(updated, null, 2));
-
-    bookAI.revertLastChange()
-
-    console.log(JSON.stringify(bookAI.getSummary(), null, 2));
-
-    updated= await bookAI.refineSection({
-        section: 'marketingCopy',
-        instruction: 'Make it more suitable for fans of military action'
-    });
-    console.log(JSON.stringify(updated, null, 2));
 }
 
 main().catch(error => {
