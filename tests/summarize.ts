@@ -48,8 +48,18 @@ async function main() {
   console.log('Summaries generated:');
   console.log(JSON.stringify(summaries, null, 2));
     
-  /*const analysis = await bookAI.analyze()
-  console.log(JSON.stringify(analysis, null, 2));*/
+  let analysis = await bookAI.analyze()
+  console.log(JSON.stringify(analysis, null, 2));
+  analysis = await bookAI.analyze({ 
+    provider: 'openai',
+    model: 'gpt-4o-mini'
+})
+  console.log(JSON.stringify(analysis, null, 2));
+  analysis = await bookAI.analyze({ 
+    provider: 'openai',
+    model: 'gpt-4-turbo'
+})
+  console.log(JSON.stringify(analysis, null, 2));
 
 }
 

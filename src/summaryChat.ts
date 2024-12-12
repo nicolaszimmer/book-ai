@@ -1,7 +1,7 @@
 import { Debugger } from 'debug';
 import debug from 'debug';
 import Anthropic from '@anthropic-ai/sdk';
-import { ComprehensiveSummary } from './summariesAnalyzer';
+import { ComprehensiveSummary, ModerationCategories } from './summariesAnalyzer';
 
 const log: Debugger = debug('book-ai:chat');
 
@@ -14,7 +14,7 @@ export interface ChatHistoryEntry {
     timestamp: string;
     section: keyof ComprehensiveSummary;
     instruction: string;
-    previousContent: string | string[] | null ;
+    previousContent: string | string[] | null | ModerationCategories | boolean;
     updatedContent: string | string[];
 }
 

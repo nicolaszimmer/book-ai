@@ -1,5 +1,5 @@
 // Define specific types for moderation categories and scores
-interface ModerationCategories {
+export interface ModerationCategories {
   sexual: boolean;
   'sexual/minors': boolean;
   harassment: boolean;
@@ -46,7 +46,7 @@ export interface SectionSummary {
   tonality: string;        
   keyEvents: string[];
   qualityIssues: string[];
-  moderation?: ModerationResult;
+  moderation: ModerationResult | null;
 }
 
 export interface BookSummary {

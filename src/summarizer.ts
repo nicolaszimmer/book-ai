@@ -9,24 +9,40 @@ import { createBookTranslator, BookTranslatorWithHistory } from './translator';
 
 const log: Debugger = debug('book-ai:summarizer');
 
-
 export class BookSummarizer {
     private book: Book;
     private summary: BookSummary | null = null;
     private translator: BookTranslatorWithHistory;
     private concurrencyLimit: number;
-    private openai: OpenAI;
+    private openai: OpenAI | null = null;
+    private enableModeration: boolean;
 
     constructor(
         book: Book,
         model: TypeChatLanguageModel,
         schema: string,
-        openaiApiKey: string,
-        concurrencyLimit: number = 75
+        options: {
+            openaiApiKey?: string,
+            concurrencyLimit?: number,
+            enableModeration?: boolean
+        } = {}
     ) {
+        const {
+            openaiApiKey,
+            concurrencyLimit = 75,
+            enableModeration = false
+        } = options;
+
         this.book = book;
         this.concurrencyLimit = concurrencyLimit;
-        this.openai = new OpenAI({ apiKey: openaiApiKey });
+        this.enableModeration = enableModeration;
+        
+        if (enableModeration) {
+            if (!openaiApiKey) {
+                throw new Error('OpenAI API key is required when moderation is enabled');
+            }
+            this.openai = new OpenAI({ apiKey: openaiApiKey });
+        }
         
         const instructions = `
 Focus on:
@@ -41,7 +57,11 @@ Maintain consistency in analysis across sections.`;
         this.translator = createBookTranslator(model, schema, instructions);
     }
 
-    private async getModerationResult(text: string): Promise<ModerationResult> {
+    private async getModerationResult(text: string): Promise<ModerationResult | null> {
+        if (!this.enableModeration || !this.openai) {
+            return null;
+        }
+
         try {
             const moderation = await this.openai.moderations.create({
                 model: "text-moderation-latest",
@@ -71,7 +91,7 @@ Maintain consistency in analysis across sections.`;
 Title: ${section.title}
 Content: ${section.content}`;
 
-                // Run summarization and moderation concurrently
+                // Only run moderation if enabled
                 const [summaryResult, moderation] = await Promise.all([
                     this.translator.translate(prompt),
                     this.getModerationResult(section.content)
@@ -84,11 +104,11 @@ Content: ${section.content}`;
 
                 log(`Successfully processed section: ${section.title}`);
                 
-                // Combine the summary data with moderation results
+                // Only include moderation results if they exist
                 const sectionSummary: SectionSummary = {
                     ...summaryResult.data,
                     title: section.title,
-                    moderation
+                    ...(moderation && { moderation })
                 };
 
                 return sectionSummary;

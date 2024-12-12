@@ -3,12 +3,11 @@ import debug from 'debug';
 import { createLanguageModel } from 'typechat';
 import { BookLoader } from './loader';
 import { BookSummarizer } from './summarizer';
-import { SummariesAnalyzer, ComprehensiveSummary } from './summariesAnalyzer';
+import { SummariesAnalyzer, ComprehensiveSummary, AnalyzerConfig } from './summariesAnalyzer';
 import { SummaryChat, ChatRequest, ChatHistoryEntry, ExportedHistory } from './summaryChat';
 import { Book } from './types';
 import { BookSummary, SectionSummary } from './schema/summarySchema';
 import { SampleSelector } from './sampleSelector';
-import { config } from 'dotenv';
 
 const log: Debugger = debug('book-ai:main');
 
@@ -18,6 +17,12 @@ interface BookAIConfig {
     anthropicApiKey: string;
     anthropicModel?: string;
     schema?: string; // Make schema optional in config
+}
+
+interface AnalyzerOptions {
+    provider?: 'anthropic' | 'openai';
+    model?: string;
+    temperature?: number;
 }
 
 const DEFAULT_SCHEMA = `
@@ -74,7 +79,7 @@ export class BookAI {
             this.book, 
             this.openAIModel,
             this.schema,
-            this.openAIApiKey
+
         );
         log(`Loaded book with ${this.book.sections.length} sections`);
         return this.book;
@@ -89,14 +94,26 @@ export class BookAI {
         return this.bookSummary;
     }
 
-    async analyze(): Promise<ComprehensiveSummary> {
-        log('Analyzing summaries');
+    async analyze(options: AnalyzerOptions = {}): Promise<ComprehensiveSummary> {
+        log('Analyzing summaries', options);
         if (!this.book || !this.summarizer) {
             throw new Error('No book loaded. Call load() first.');
         }
 
-        const summaries = this.bookSummary ||  await this.getSectionSummaries();
-        const analyzer = new SummariesAnalyzer(this.anthropicApiKey, this.anthropicModel);
+        const summaries = this.bookSummary || await this.getSectionSummaries();
+        
+        // Build analyzer config with defaults
+        const analyzerConfig: AnalyzerConfig = {
+            provider: options.provider || 'anthropic',
+            model: options.model || this.anthropicModel,
+            temperature: options.temperature,
+            // Provide appropriate API key based on provider
+            ...(options.provider === 'openai' 
+                ? { openaiApiKey: this.openAIApiKey }
+                : { anthropicApiKey: this.anthropicApiKey })
+        };
+
+        const analyzer = new SummariesAnalyzer(analyzerConfig);
         this.comprehensiveSummary = await analyzer.analyze(summaries);
         return this.comprehensiveSummary;
     }
@@ -212,7 +229,8 @@ export type {
     ComprehensiveSummary,
     ChatRequest,
     ChatHistoryEntry,
-    ExportedHistory
+    ExportedHistory,
+    AnalyzerOptions
 };
 
 export { SummaryChat, SampleSelector };
