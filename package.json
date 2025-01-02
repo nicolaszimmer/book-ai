@@ -1,6 +1,6 @@
 {
     "name": "@prepub/book-ai",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "AI-powered book analysis using TypeChat",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
